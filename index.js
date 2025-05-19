@@ -101,7 +101,7 @@ app.post('/pay', async (req, res) => {
         'Content-Type': 'application/json',
         'X-Request-ID': reference
       },
-      timeout: 10000
+      timeout: 5000
     });
     
     return res.json({
