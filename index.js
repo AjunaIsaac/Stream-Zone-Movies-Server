@@ -44,30 +44,30 @@ const generateReference = () =>
 const validatePaymentRequest = (body) => {
   const requiredFields = ['phone', 'amount', 'plan', 'days', 'email'];
   const missingFields = requiredFields.filter(field => !body[field]);
-
+  
   if (missingFields.length > 0) {
     return { valid: false, message: `Missing required fields: ${missingFields.join(', ')}` };
   }
-
+  
   const { phone, amount, plan, days } = body;
   const planConfig = PLANS[plan];
-
+  
   if (!planConfig) {
     return { valid: false, message: `Invalid plan. Options: ${Object.keys(PLANS).join(', ')}` };
   }
-
+  
   if (planConfig.price !== Number(amount)) {
     return { valid: false, message: `Incorrect amount for ${plan} plan. Should be UGX ${planConfig.price}` };
   }
-
+  
   if (planConfig.days !== Number(days)) {
     return { valid: false, message: `Duration mismatch. Expected ${planConfig.days} days` };
   }
-
+  
   if (!/^256(7|3)\d{8}$/.test(phone)) {
     return { valid: false, message: "Invalid phone format. Must start with 2567 or 2563" };
   }
-
+  
   return { valid: true };
 };
 
@@ -81,13 +81,12 @@ app.post('/pay', async (req, res) => {
       message: validation.message
     });
   }
-
+  
   const { phone, amount, plan, days, email } = req.body;
   const reference = generateReference();
   transactions[reference] = 'pending';
-
-  const webhookUrl = 'https://d4ff448b-fed7-4c7d-a88e-59097c76e563-00-384ps5selt1ck.worf.replit.dev/webhook'; // Replace with your webhook URL
-
+  
+  const webhookUrl = 'https://stream-zone-movies-server-production.up.railway.app/webhook';
   try {
     const response = await axios.post(PAYMENT_API_URL, {
       apikey: PUBLIC_KEY,
@@ -104,7 +103,7 @@ app.post('/pay', async (req, res) => {
       },
       timeout: 10000
     });
-
+    
     return res.json({
       success: true,
       transactionId: response.data.transactionId || reference,
@@ -115,7 +114,7 @@ app.post('/pay', async (req, res) => {
     console.error('Payment error:', error.message);
     const statusCode = error.response?.status || 500;
     const errorMessage = error.response?.data?.message || "Payment failed";
-
+    
     return res.status(statusCode).json({
       error: true,
       code: 'PAYMENT_ERROR',
@@ -127,15 +126,15 @@ app.post('/pay', async (req, res) => {
 // Webhook handler
 app.post('/webhook', (req, res) => {
   const { reference, status } = req.body;
-
+  
   if (!reference || !status) {
     console.error('Invalid webhook:', req.body);
     return res.status(400).json({ error: true, message: 'Missing reference or status' });
   }
-
+  
   console.log(`Webhook received for ${reference}: ${status}`);
   transactions[reference] = status;
-
+  
   return res.status(200).json({ success: true });
 });
 
@@ -143,7 +142,7 @@ app.post('/webhook', (req, res) => {
 app.get('/check-status', (req, res) => {
   const { reference } = req.query;
   if (!reference) return res.status(400).json({ error: true, message: 'Missing reference' });
-
+  
   const status = transactions[reference] || 'pending';
   res.json({ reference, status });
 });
@@ -152,7 +151,7 @@ app.get('/check-status', (req, res) => {
 app.post('/check-status', async (req, res) => {
   const { transaction_id } = req.body;
   if (!transaction_id) return res.status(400).json({ error: true, message: 'Missing transaction_id' });
-
+  
   try {
     const response = await axios.post(STATUS_API_URL, {
       apikey: PUBLIC_KEY,
@@ -163,7 +162,7 @@ app.post('/check-status', async (req, res) => {
         'Authorization': `Bearer ${SECRET_KEY}`
       }
     });
-
+    
     return res.json({
       status: response.data.status || "unknown"
     });
