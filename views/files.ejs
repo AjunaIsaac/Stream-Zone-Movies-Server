@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files - <%= currentPath %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f8f9fa; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .breadcrumbs { font-size: 1.2rem; color: #555; }
+        .breadcrumbs a { color: #007bff; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .logout-btn { padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f1f3f5; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8f9fa; }
+        td a { color: #007bff; text-decoration: none; font-weight: 500; }
+        .icon { margin-right: 0.8rem; color: #888; width: 20px; text-align: center; }
+        .icon-folder { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <% helpers.generateBreadcrumbs(currentPath).forEach((crumb, index) => { %>
+                    <a href="<%= crumb.path %>"><%= crumb.name %></a>
+                    <% if (index < helpers.generateBreadcrumbs(currentPath).length - 1) { %> / <% } %>
+                <% }) %>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (currentPath) { %>
+                    <tr>
+                        <td colspan="3">
+                            <a href="<%= parentPath %>"><span class="icon"><i class="fas fa-level-up-alt"></i></span>Parent Directory</a>
+                        </td>
+                    </tr>
+                <% } %>
+
+                <% folders.forEach(folder => { %>
+                    <tr>
+                        <td>
+                            <a href="/<%= folder.fullPath %>"><span class="icon icon-folder"><i class="fas fa-folder"></i></span><%= folder.name %></a>
+                        </td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                <% }); %>
+
+                <% files.forEach(file => { %>
+                    <tr>
+                        <td>
+                            <a href="<%= file.link %>" target="_blank"><span class="icon"><i class="<%= helpers.getFileIcon(file.name) %>"></i></span><%= file.name %></a>
+                        </td>
+                        <td><%= file.size %></td>
+                        <td><%= file.lastModified.toLocaleDateString() %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
